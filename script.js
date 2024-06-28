@@ -8,6 +8,7 @@ const execPromise = promisify(exec);
 const rootDir = 'origin';
 const wordToReplace = 'language';
 
+//This is what you have to change if you want to add or delete any language
 const languages = ['japanese', 'spanish', 'portuguese', 'english'];
 
 async function main() {
