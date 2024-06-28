@@ -36,6 +36,7 @@ Finally, open a console, navigate to the directory where you have the "script.js
 A directory named "target" will be created, containing all your translated files organized into different subdirectories based on their language.
 
 ## 📝 To-Do List
+- [ ] Include functionality for systems outside Linux and UNIX.
 - [ ] Change the language format to it's code.
 - [ ] Add a settings file to manage the base directory and the output directory.
 - [ ] Improve the speed of the script.
