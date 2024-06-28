@@ -11,7 +11,7 @@ You need to install the [chatgpt-md-translator](https://github.com/smikitky/chat
 Install Node.js by following the instructions in this link: [Node.js installation](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs).
 In the "script.js" file, you can modify the values of the `languages` variable to translate your files into those languages.
 
-![image of variable language](https://i.pinimg.com/originals/9c/b4/a4/9cb4a43da7b91b19b3eb54de84ea0091.png)
+![image of variable language](https://i.pinimg.com/originals/59/b0/a4/59b0a47b6f319c1148d1b4268ed38311.png)
 
 Place your original files that you want to translate inside the "origin" directory.
 Finally, open a console, navigate to the directory where you have the "script.js" file, and execute the command `node script.js`.
