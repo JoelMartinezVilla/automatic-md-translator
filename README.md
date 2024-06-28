@@ -7,8 +7,9 @@ Automatic translation of Markdown-formatted files into the language of your choi
 This can be useful if you manage website content through these types of files.
 
 ## 👨‍💻 Requirements:
-You need to install the [chatgpt-md-translator](https://github.com/smikitky/chatgpt-md-translator?tab=readme-ov-file) repository by following the steps in the provided link.
-Install Node.js by following the instructions in this link: [Node.js installation](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs).
+- You need to install the [chatgpt-md-translator](https://github.com/smikitky/chatgpt-md-translator?tab=readme-ov-file) repository by following the steps in the provided link.
+  
+- Install Node.js by following the instructions in this link: [Node.js installation](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs).
 
 ## 💥 Usage Method:
 In the "script.js" file, you can modify the values of the `languages` variable to translate your files into those languages.
