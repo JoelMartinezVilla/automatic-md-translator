@@ -16,7 +16,19 @@ This can be useful if you manage website content through these types of files.
 ## 💥 Usage Method:
 In the "script.js" file, you can modify the values of the `languages` variable to translate your files into those languages.
 
-```const languages = ['japanese', 'spanish', 'portuguese', 'english'];```
+```
+const fs = require("fs").promises;
+const { exec } = require("child_process");
+const { promisify } = require("util");
+const path = require("path");
+const execPromise = promisify(exec);
+
+// Base directory where the files to translate are
+const rootDir = 'origin';
+const wordToReplace = 'language';
+
+const languages = ['japanese', 'spanish', 'portuguese', 'english'];
+```
 
 Place your original files that you want to translate inside the "origin" directory.
 Finally, open a console, navigate to the directory where you have the "script.js" file, and execute the command `node script.js`.
