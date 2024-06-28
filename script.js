@@ -51,13 +51,13 @@ async function main() {
                         await fs.mkdir(destSubDirPath, { recursive: true });
 
                         if (file.endsWith(".md")) {
-                            console.log("Translating "+file+" to "+lang);
+                            console.log("[*]Translating "+file+" to "+lang);
                             // Translate the .md file
                             if (i==0) {
                                 // In case the language is the first change the wordToReplace
                                 try {
                                     await execPromise(`sed -i "s/${wordToReplace}/${lang}/g" prompt.md && chatgpt-md-translator -o "${destFilePath}" "${srcFilePath}"`);
-                                    console.log("File "+file+" translated successfully to "+lang);
+                                    console.log("File "+file+" translated successfully to "+lang+"\n");
                                 } catch (error) {
                                     console.error('Error when executing the command:', error);
                                     continue;
