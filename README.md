@@ -16,7 +16,7 @@ This can be useful if you manage website content through these types of files.
 ## 💥 Usage Method:
 In the "script.js" file, you can modify the values of the `languages` variable to translate your files into those languages.
 
-![image of variable language](https://i.pinimg.com/originals/59/b0/a4/59b0a47b6f319c1148d1b4268ed38311.png)
+```const languages = ['japanese', 'spanish', 'portuguese', 'english'];```
 
 Place your original files that you want to translate inside the "origin" directory.
 Finally, open a console, navigate to the directory where you have the "script.js" file, and execute the command `node script.js`.
