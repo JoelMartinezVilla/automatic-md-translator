@@ -1,0 +1,11 @@
+{
+  "name": "automatic-md-translator",
+  "version": "1.0.0",
+  "description": "Automatic translation of Markdown-formatted files into the language of your choice using the [chatgpt-md-translator](https://github.com/smikitky/chatgpt-md-translator?tab=readme-ov-file) repository. The code creates a folder structure by language and generates translated copies of your \".md\" files.\r This can be useful if you manage website content through these types of files.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
