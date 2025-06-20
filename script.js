@@ -5,11 +5,13 @@ const path = require("path");
 const execPromise = promisify(exec);
 
 // Base directory where the files to translate are
-const rootDir = 'origin';
+const rootDir = '../marketing-website/src/content/es/blog';
+const outputPath = '../marketing-website/src/content';
+
 const wordToReplace = 'language';
 
 //This is what you have to change if you want to add or delete any language
-const languages = ['japanese', 'spanish', 'portuguese', 'english'];
+const languages = {'it': 'italian', 'ca':'catalan', 'de':'german', 'en':'english'};
 
 async function main() {
 
@@ -29,10 +31,14 @@ async function main() {
         console.error('Error when duplicating the prompt:', err);
     }
 
+    let i = -1;
     // Main loop over the languages
-    for (let i = 0; i < languages.length; i++) {
-        let lang = languages[i];
-        
+    for (let code of Object.keys(languages)) {
+        console.log(code);
+        console.log(languages[code]);
+
+        let lang = languages[code];
+        i++
         try {
             // Loop inside of the directory 
             const dirs = await fs.readdir(rootDir);
@@ -45,7 +51,7 @@ async function main() {
 
                         // Create the path to the file
                         const srcFilePath = path.join(dirPath, file);
-                        const destDirPath = path.join('target', lang);
+                        const destDirPath = path.join(outputPath, code);
                         const destSubDirPath = path.join(destDirPath, dir);
                         const destFilePath = path.join(destSubDirPath, file);
 
@@ -64,8 +70,10 @@ async function main() {
                                     continue;
                                 }
                             } else {
-                                // If the language is not the first, change the last language
+                                // If the language is not the first, change the last language 
                                 try {
+                                    // Fix                              |
+                                    //                                  V
                                     await execPromise(`sed -i "s/${languages[i - 1]}/${lang}/g" prompt.md && chatgpt-md-translator -o "${destFilePath}" "${srcFilePath}"`);
                                     console.log("File "+file+" translated successfully to "+lang);
                                 } catch (error) {
