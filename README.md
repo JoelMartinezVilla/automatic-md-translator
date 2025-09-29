@@ -24,16 +24,47 @@ const path = require("path");
 const execPromise = promisify(exec);
 
 // Base directory where the files to translate are
-const rootDir = 'origin';
-const wordToReplace = 'language';
+const rootDir = './target/';
+const outputPath = './dest/';
+
+const wordToReplace = '{TARGET_LANGUAGE}';
 
 //This is what you have to change if you want to add or delete any language
-const languages = ['japanese', 'spanish', 'portuguese', 'english'];
+const languages = { 'en': 'english', "it": "italian" };
 ```
 
-Place your original files that you want to translate inside the "origin" directory.
+Place your original files that you want to translate inside the "target" directory.
 Finally, open a console, navigate to the directory where you have the "script.js" file, and execute the command `node script.js`.
-A directory named "target" will be created, containing all your translated files organized into different subdirectories based on their language.
+A directory named "dest" will be created, containing all your translated files organized into different subdirectories based on their language.
+
+### Example
+
+Let's say we're going to translate a folder named "files" that contains three files: "1.md", "2.md" and "3.yaml".
+The first step to translating the files would be to copy and paste the folder with its content into the folder "target" inside the repo.
+
+It should look somewhat like this
+```js
+── automatic-md-translator/
+ ├── target/
+ │ └── files/
+ │   └── 1.md
+ │   └── 2.md
+ │   └── 3.yaml
+ ├── script.js
+ ├── ... some other files
+```
+Then we will look for the variable languages inside the script.js and add the languages we sant with this key: value format: {"es": "spanish", ... other languages}.
+Now all we have to do is call the script with "node script.js" with a console in the root of the repo and you will have the same structure as before but with the name of the language translated to. Like this: 
+```js
+── automatic-md-translator/
+ ├── target/
+ │ └── files/
+ │   └── es.md
+ │   └── es.md
+ │   └── 3.yaml
+ ├── script.js
+ ├── ... some other files
+```
 
 ## 📝 To-Do List
 - [ ] Include functionality for systems outside Linux and UNIX.

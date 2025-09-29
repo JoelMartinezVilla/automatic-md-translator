@@ -5,13 +5,15 @@ const path = require("path");
 const execPromise = promisify(exec);
 
 // Base directory where the files to translate are
-const rootDir = '../marketing-website/src/content/es/blog';
-const outputPath = '../marketing-website/src/content';
+const rootDir = './target/';
+const outputPath = './dest/';
 
-const wordToReplace = 'language';
+const wordToReplace = '{TARGET_LANGUAGE}';
 
 //This is what you have to change if you want to add or delete any language
-const languages = {'it': 'italian', 'ca':'catalan', 'de':'german', 'en':'english'};
+const languages = { 'en': 'english', "it": "italian" };
+
+let lastLang = "";
 
 async function main() {
 
@@ -38,65 +40,77 @@ async function main() {
         console.log(languages[code]);
 
         let lang = languages[code];
-        i++
+        i++;
+
         try {
-            // Loop inside of the directory 
-            const dirs = await fs.readdir(rootDir);
-            for (const dir of dirs) {
-                const dirPath = path.join(rootDir, dir);
-                try {
-                    const files = await fs.readdir(dirPath);
-                    // Loop over the files inside each directory
-                    for (const file of files) {
-
-                        // Create the path to the file
-                        const srcFilePath = path.join(dirPath, file);
-                        const destDirPath = path.join(outputPath, code);
-                        const destSubDirPath = path.join(destDirPath, dir);
-                        const destFilePath = path.join(destSubDirPath, file);
-
-                        await fs.mkdir(destSubDirPath, { recursive: true });
-
-                        if (file.endsWith(".md")) {
-                            console.log("[*]Translating "+file+" to "+lang);
-                            // Translate the .md file
-                            if (i==0) {
-                                // In case the language is the first change the wordToReplace
-                                try {
-                                    await execPromise(`sed -i "s/${wordToReplace}/${lang}/g" prompt.md && chatgpt-md-translator -o "${destFilePath}" "${srcFilePath}"`);
-                                    console.log("File "+file+" translated successfully to "+lang+"\n");
-                                } catch (error) {
-                                    console.error('Error when executing the command:', error);
-                                    continue;
-                                }
-                            } else {
-                                // If the language is not the first, change the last language 
-                                try {
-                                    // Fix                              |
-                                    //                                  V
-                                    await execPromise(`sed -i "s/${languages[i - 1]}/${lang}/g" prompt.md && chatgpt-md-translator -o "${destFilePath}" "${srcFilePath}"`);
-                                    console.log("File "+file+" translated successfully to "+lang);
-                                } catch (error) {
-                                    console.error('Error when executing the command:', error);
-                                    continue;
-                                }
-                            }
-                        } else {
-                            // Copy the file if it is not a .md
-                            try {
-                                await fs.copyFile(srcFilePath, destFilePath);
-                                console.log('File '+file+' duplicated successfully.');
-                            } catch (err) {
-                                console.error('Error when duplicating the file:', err);
-                            }
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error reading the directory:', err);
-                }
-            }
+            // Recursively process everything under rootDir
+            await walkAndProcess(rootDir, code, lang, i === 0);
         } catch (err) {
             console.error('Error reading the directory:', err);
+        }
+
+        lastLang = lang;
+    }
+}
+
+
+async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
+    const entries = await fs.readdir(currentDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const srcEntryPath = path.join(currentDir, entry.name);
+        // Path relative to rootDir so we can mirror it in dest
+        const relPath = path.relative(rootDir, srcEntryPath);
+        const destEntryPath = path.join(outputPath, relPath);
+        const destFilePath = destEntryPath.replace(entry.name, `${code}.md`)
+
+        if (entry.isDirectory()) {
+            // Ensure destination directory exists, then recurse
+            try {
+                await fs.mkdir(destEntryPath, { recursive: true });
+            } catch (err) {
+                console.error('Error when creating destination directory:', err);
+            }
+            await walkAndProcess(srcEntryPath, code, lang, isFirstLanguage);
+        } else {
+            // Ensure the parent folder exists for files
+            try {
+                await fs.mkdir(path.dirname(destFilePath), { recursive: true });
+            } catch (err) {
+                console.error('Error when creating destination subdirectory:', err);
+            }
+
+            if (entry.name.endsWith(".md")) {
+                console.log("[*]Translating " + entry.name + " to " + lang);
+
+                // Keep original behavior for prompt replacements
+                const sedCmd = isFirstLanguage
+                    ? `sed -i "s/${wordToReplace}/${lang}/g" prompt.md`
+                    : `sed -i "s/${lastLang}/${lang}/g" prompt.md`;
+
+                try {
+                    const { stdout, stderr } = await execPromise(
+                        `${sedCmd} && chatgpt-md-translator -o "${destFilePath}" "${srcEntryPath}"`
+                    );
+                    if (stderr) {
+                        console.log(stdout + " " + stderr);
+                    } else {
+                        console.log(stdout);
+                    }
+                    console.log("File " + entry.name + " translated successfully to " + lang + "\n");
+                } catch (error) {
+                    console.error('Error when executing the command:', error);
+                    continue;
+                }
+            } else {
+                // Copy the file if it is not a .md
+                try {
+                    await fs.copyFile(srcEntryPath, destEntryPath);
+                    console.log('File ' + entry.name + ' duplicated successfully.');
+                } catch (err) {
+                    console.error('Error when duplicating the file:', err);
+                }
+            }
         }
     }
 }
