@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chatgpt-md-translator": "^1.9.1"
+    "chatgpt-md-translator": "^1.9.1",
+    "tiktoken": "^1.0.22"
   }
 }
