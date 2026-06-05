@@ -10,14 +10,12 @@ Strict rules:
 4. Do not translate code blocks or inline code.
 5. Do not translate filenames, paths, slugs, URLs, imports, component names, variables, placeholders, or template syntax.
 6. For YAML front matter:
-
    * Never translate YAML keys.
    * Translate only string values for these keys: `{{TRANSLATABLE_KEYS}}`.
-   * Do not translate values for these keys: `{{IGNORED_KEYS}}`.
+   * Do not translate values for these keys: permalink, eleventyNavigation, lang.
    * Preserve YAML formatting, indentation, arrays, quotes, booleans, numbers, dates, and nulls.
 7. In the Markdown body, translate normal prose.
-8. Do not translate these terms; keep them exactly as written:
-   `{{DO_NOT_TRANSLATE_TERMS}}`
+8. Do not translate these terms; keep them exactly as written: Openers & Closers, Shearlock, Calle Agricultura 17, (Nave 12) 08980 Sant Feliu de Llobregat Barcelona.
 9. Prefer the approved translations from this glossary CSV whenever a source term appears.
 
 10. If a term is not in the glossary, translate it naturally and consistently.
