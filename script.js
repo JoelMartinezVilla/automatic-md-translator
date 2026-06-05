@@ -7,14 +7,14 @@ const { encoding_for_model } = require("tiktoken");
 
 
 const MODEL = "gpt-4o";  
-const INPUT_PRICE_PER_MTOK  = 2.5;
-const OUTPUT_PRICE_PER_MTOK = 10.0; 
+const INPUT_PRICE_PER_MTOK  = 0.20;
+const OUTPUT_PRICE_PER_MTOK = 1.25; 
 const enc = encoding_for_model(MODEL);
 
-const rootDir = './target/';
+const rootDir = './origin/';
 const outputPath = './dest/';
 const wordToReplace = '{TARGET_LANGUAGE}';
-const languages = { 'en': 'english', "it": "italian" };
+const languages = { "it": "italian" };
 let lastLang = "";
 
 let grandInputTokens = 0;
@@ -65,7 +65,7 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
 
     await fs.mkdir(path.dirname(destFilePath), { recursive: true });
 
-    if (!entry.name.endsWith(".md")) {
+    if (entry.name != "es.md") {
       await fs.copyFile(srcEntryPath, destEntryPath);
       continue;
     }
