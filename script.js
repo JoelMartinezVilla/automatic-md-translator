@@ -15,7 +15,7 @@ const rootDir = './origin/';
 const outputPath = './dest/';
 const wordToReplace = '{TARGET_LANGUAGE}';
 const languages = { "it": "italian" };
-const limitSpending = 0.01;
+const limitSpending = 1.50;
 let lastLang = "";
 let stopProcessing = false;
 
@@ -89,7 +89,7 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
 
     const inputCost = (inputTokens * INPUT_PRICE_PER_MTOK) / 1_000_000;
 
-    if (limitSpending && (grandInputCost + grandOutputCost + inputCost) >= limitSpending ){
+    if (typeof limitSpending != "undefined" && (grandInputCost + grandOutputCost + inputCost) >= limitSpending ){
       console.error("Reached spending limit of:" + limitSpending);
       stopProcessing = true;
       return;
