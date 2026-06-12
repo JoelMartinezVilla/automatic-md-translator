@@ -5,14 +5,21 @@ const path = require("path");
 const execPromise = promisify(exec);
 const { encoding_for_model } = require("tiktoken");
 
+const RATE_LIMIT_TOKENS = 160_000;
+const RATE_LIMIT_WAIT_MS = 60_000;
 
-const MODEL = "gpt-4o";  
-const INPUT_PRICE_PER_MTOK  = 0.20;
-const OUTPUT_PRICE_PER_MTOK = 1.25; 
+let minuteWindowTokens = 0;
+let minuteWindowStartedAt = Date.now();
+
+const MODEL = "gpt-4o";
+const INPUT_PRICE_PER_MTOK = 0.20;
+const OUTPUT_PRICE_PER_MTOK = 1.25;
 const enc = encoding_for_model(MODEL);
 
-const rootDir = './origin/';
-const outputPath = './dest/';
+const rootDir = '../legal/src/content/it/legal';
+const outputPath = '../../../Escritorio/leagal-it/';
+// const rootDir = '../opcl-website/src/content/products/';
+// const outputPath = '../opcl-website/src/content/products/';
 const wordToReplace = '{TARGET_LANGUAGE}';
 const languages = { "it": "italian" };
 const limitSpending = 1.50;
@@ -24,8 +31,46 @@ let grandOutputTokens = 0;
 let grandInputCost = 0;
 let grandOutputCost = 0;
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+async function waitIfTokenLimitWouldBeHit(nextTokens) {
+  const elapsed = Date.now() - minuteWindowStartedAt;
+
+  if (elapsed >= RATE_LIMIT_WAIT_MS) {
+    minuteWindowTokens = 0;
+    minuteWindowStartedAt = Date.now();
+  }
+
+  if (minuteWindowTokens + nextTokens >= RATE_LIMIT_TOKENS) {
+    console.log(`[rate-limit] Reached ~${minuteWindowTokens} tokens this minute. Waiting 60s...`);
+    await sleep(RATE_LIMIT_WAIT_MS);
+
+    minuteWindowTokens = 0;
+    minuteWindowStartedAt = Date.now();
+  }
+
+  minuteWindowTokens += nextTokens;
+}
+
+function isRateLimitError(error) {
+  const text = [
+    error?.message,
+    error?.stderr,
+    error?.stdout,
+    String(error)
+  ].join(" ").toLowerCase();
+
+  return (
+    text.includes("rate limit") ||
+    text.includes("rate_limit") ||
+    text.includes("tokens per min") ||
+    text.includes("tpm") ||
+    text.includes("429")
+  );
+}
+
 async function main() {
-  try { await fs.unlink('prompt.md'); } catch {}
+  try { await fs.unlink('prompt.md'); } catch { }
   await fs.copyFile('template_prompt.md', 'prompt.md');
 
   let i = -1;
@@ -60,7 +105,9 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
     const srcEntryPath = path.join(currentDir, entry.name);
     const relPath = path.relative(rootDir, srcEntryPath);
     const destEntryPath = path.join(outputPath, relPath);
-    const destFilePath = destEntryPath.replace(entry.name, `${code}.md`);
+    const destFilePath = destEntryPath;
+
+    // const destFilePath = destEntryPath.replace(entry.name, `${code}.md`);
 
     if (entry.isDirectory()) {
       await fs.mkdir(destEntryPath, { recursive: true });
@@ -70,9 +117,13 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
 
     await fs.mkdir(path.dirname(destFilePath), { recursive: true });
 
-    if (entry.name != "es.md") {
-      await fs.copyFile(srcEntryPath, destEntryPath);
-      continue;
+    // if (entry.name != "es.md") {
+    //   // await fs.copyFile(srcEntryPath, destEntryPath);
+    //   continue;
+    // }
+
+    if (!entry.name.endsWith(".md")) {
+      continue; 
     }
 
     console.log("[*] Translating " + entry.name + " to " + lang);
@@ -89,7 +140,7 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
 
     const inputCost = (inputTokens * INPUT_PRICE_PER_MTOK) / 1_000_000;
 
-    if (typeof limitSpending != "undefined" && (grandInputCost + grandOutputCost + inputCost) >= limitSpending ){
+    if (typeof limitSpending != "undefined" && (grandInputCost + grandOutputCost + inputCost) >= limitSpending) {
       console.error("Reached spending limit of:" + limitSpending);
       stopProcessing = true;
       return;
@@ -104,16 +155,32 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
       ? `sed -i "s/${escapeSed(fromStr)}/${escapeSed(lang)}/g" prompt.md`
       : `sed -i "s/${escapeSed(lastLang)}/${escapeSed(lang)}/g" prompt.md`;
 
-    try {
-      const { stdout, stderr } = await execPromise(
-        `${sedCmd} && chatgpt-md-translator -o "${destFilePath}" "${srcEntryPath}"`
-      );
-      if (stderr) console.log(stdout + " " + stderr);
-      else console.log(stdout);
-      console.log("OK " + entry.name + " -> " + lang + "\n");
-    } catch (error) {
-      console.error('Error executing command:', error);
-      continue;
+    while (true) {
+      try {
+        await waitIfTokenLimitWouldBeHit(inputTokens);
+
+        const { stdout, stderr } = await execPromise(
+          `${sedCmd} && chatgpt-md-translator -o "${destFilePath}" "${srcEntryPath}"`
+        );
+
+        if (stderr) console.log(stdout + " " + stderr);
+        else console.log(stdout);
+
+        console.log("OK " + entry.name + " -> " + lang + "\n");
+
+        break; // success
+      } catch (error) {
+        if (isRateLimitError(error)) {
+          console.log(
+            "[rate-limit] API limit reached. Waiting 60s before retrying same file..."
+          );
+
+          await sleep(60_000);
+          continue;
+        }
+
+        throw error; // actual error, stop script
+      }
     }
 
     try {
@@ -126,7 +193,7 @@ async function walkAndProcess(currentDir, code, lang, isFirstLanguage) {
 
       const totalThisFile = inputCost + outputCost;
       console.log(
-        `[simple] outputTokens=${outputTokens} | estOutputCost=$${outputCost.toFixed(6)} | estTOTAL_archivo=$${totalThisFile.toFixed(6)}`
+        `[simple] outputTokens=${outputTokens} | estOutputCost=$${outputCost.toFixed(6)} | estTOTAL_archivo=$${totalThisFile.toFixed(6)}`+`\n totalTokens=${grandOutputTokens+grandInputTokens} | estTotalCost=$${grandInputCost+grandOutputCost}`
       );
     } catch {
       console.log(`[simple] (sin salida legible, solo se suma la entrada)`);
